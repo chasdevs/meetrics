@@ -1,0 +1,14 @@
+---
+db:
+  host: localhost
+  port: 3306
+  user: meetrics
+  password: password
+  database: meetrics
+  rootUser: root
+  rootPassword: password
+  rootDatabase: mysql
+
+google:
+  adminEmail: admin@gmail.com
+  domain: yourdomain.com
