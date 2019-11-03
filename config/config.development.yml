@@ -10,5 +10,5 @@ db:
   rootDatabase: mysql
 
 google:
-  adminEmail: admin@gmail.com
+  subject: admin@gmail.com
   domain: yourdomain.com

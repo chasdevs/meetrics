@@ -30,7 +30,7 @@ func Calendar(email string) calendar.Service {
 
 // Admin returns a client for the Google Admin API
 func Admin() admin.Service {
-	client := getClient(conf.GetString("google.adminEmail"))
+	client := getClient(conf.GetString("google.subject"))
 
 	srv, err := admin.New(client)
 	if err != nil {
