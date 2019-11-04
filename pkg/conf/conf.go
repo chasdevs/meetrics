@@ -4,13 +4,16 @@ import (
 	"fmt"
 	"github.com/go-sql-driver/mysql"
 	"github.com/spf13/viper"
+	"path"
+	"runtime"
 	"strings"
 )
 
+var env string
+
 func init() {
-	env := initEnv()
-	configFile := fmt.Sprintf("config/config.%v.yml", env)
-	viper.SetConfigFile(configFile)
+	env = initEnv()
+	viper.SetConfigFile(configFile())
 
 	// Allow env vars to use underscores for periods
 	replacer := strings.NewReplacer(".", "_")
@@ -79,6 +82,12 @@ func initEnv() string {
 	fmt.Printf("Environment: %v\n", env)
 
 	return env
+}
+
+func configFile() string {
+	_, filename, _, _ := runtime.Caller(1)
+	filepath := path.Join(path.Dir(filename), fmt.Sprintf("../../config/%v.yml", env))
+	return filepath
 }
 
 // UTIL
