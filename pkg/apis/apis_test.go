@@ -7,11 +7,11 @@ import (
 	"testing"
 )
 
-func TestApis(t *testing.T) {
+func TestAdminApi(t *testing.T) {
 	adminApi := apis.Admin()
 	domain := conf.GetString("google.domain")
-	assert.Equal(t, "chas", domain)
 	res, err := adminApi.Users.List().Domain(domain).Do()
 	assert.Nil(t, err)
 	assert.NotNil(t, res)
+	assert.GreaterOrEqual(t, len(res.Users), 1)
 }
