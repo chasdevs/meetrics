@@ -1,6 +1,6 @@
 # Meetrics
 
-Basic Google Calendar meeting data tracking within a Google organization. This is the codebase behind [this blog post](https://engineering.videoblocks.com/analyzing-meeting-metrics-using-the-google-calendar-api-3c76c9f8ffea) which describes how we analyzed meeting data at [Storyblocks](https://storyblocks.com).
+Basic Google Calendar meeting data tracking within a Google organization. This is the codebase behind [this blog post](https://engineering.videoblocks.com/analyzing-meeting-metrics-using-the-google-calendar-api-3c76c9f8ffea) which describes how we analyzed meeting data at [Storyblocks](https://www.storyblocks.com).
 
 ![Meeting Data Graph](https://miro.medium.com/max/3868/1*K1mHm1dBwsQGCvs9A1xs6A.png)
 
@@ -43,6 +43,13 @@ The following configs are set via environment variables or _config/production.ym
 ```
 # Start mysql using docker-compose and initialize local database.
 make init
+```
+
+### Verify Configuration
+
+You can verify that the code is able to hit the Google APIs by running the tests for the `apis` package.
+```
+go test ./pkg/apis
 ```
 
 ### Docker

@@ -16,4 +16,4 @@
 vendor
 
 config/service_account_key.json
-config/config.production.yml
+config/production.yml

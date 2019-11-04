@@ -86,7 +86,7 @@ func initEnv() string {
 
 func configFile() string {
 	_, filename, _, _ := runtime.Caller(1)
-	filepath := path.Join(path.Dir(filename), fmt.Sprintf("../../config/config.%v.yml", env))
+	filepath := path.Join(path.Dir(filename), fmt.Sprintf("../../config/%v.yml", env))
 	return filepath
 }
 
