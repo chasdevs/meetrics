@@ -37,6 +37,15 @@ The following configs are set via environment variables or _config/production.ym
     - (required) The domain of the Google account. 
 - GOOGLE_SUBJECT 
     - (required) The email of the account to query Google's Calendar API.
+    
+### Populating the Users Table
+
+I found that a manually-curated whitelist of users was the best way to get accurate data on employees, since there are multiple aliases and miscellaneous emails in any organization. It was also the best way to attach a department to each user.
+
+The `setup.PopulateUsersFromCsv` function reads in the [user-departments.csv](./pkg/setup/userdepartments/user-departments.csv) file and populates the users table. Edit this file to reflect your organization.
+
+If you do not want to manually enter the user information, the `setup.PopulateUsersFromApi` method can be used instead, but this does not include department information and may include emails you do not wish to analyze.
+
 
 ## Development
 
