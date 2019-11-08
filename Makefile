@@ -11,7 +11,7 @@ END   := $(shell printf "\e[0m")
 init:
 	docker-compose up -d mysql
 	go run db_init.go
-	# $(OK) image $(END)
+	# $(OK) init $(END)
 
 image:
 	docker build -t chasdevs/meetrics .

@@ -7,6 +7,7 @@ import (
 	"path"
 	"runtime"
 	"strings"
+	log "github.com/sirupsen/logrus"
 )
 
 var env string
@@ -22,7 +23,8 @@ func init() {
 
 	err := viper.ReadInConfig()
 	if err != nil {
-		panic(fmt.Errorf("Fatal error config file: %s\n", err))
+		log.Errorf("Error reading config file. Check to make sure the config/%s.yml file exists.", env)
+		panic(err)
 	}
 
 }
@@ -79,7 +81,7 @@ func initEnv() string {
 		env = "production"
 	}
 
-	fmt.Printf("Environment: %v\n", env)
+	log.Infof("Environment: %v\n", env)
 
 	return env
 }
