@@ -31,7 +31,7 @@ func SaveEvents(events []*calendar.Event) error {
 	return w.Flush()
 }
 
-func StreamEvents() []calendar.Event {
+func ReadEvents() []calendar.Event {
 	file, _ := os.Open(eventStore)
 	defer file.Close()
 
@@ -45,8 +45,7 @@ func StreamEvents() []calendar.Event {
 			log.Error("Could not unmarshal json", err)
 		}
 
-		log.Info(eventSlice)
-		_ = append(events, eventSlice...)
+		events = append(events, eventSlice...)
 	}
 
 	if err := scanner.Err(); err != nil {

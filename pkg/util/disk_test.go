@@ -21,6 +21,6 @@ func TestDisk(t *testing.T) {
 }
 
 func TestStreamEvents(t *testing.T) {
-	events := util.StreamEvents()
+	events := util.ReadEvents()
 	log.Info("events", events)
 }
