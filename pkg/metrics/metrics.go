@@ -91,7 +91,7 @@ func CompileMetricsForUser(date time.Time, user data.User, eventChan chan<- User
 	ctxLog.Debug("Compiling events for user.")
 
 	//events := getDummyEventsForUser(date, user)
-	events := getEventsForUser(date, user)
+	events := GetEventsForUser(date, user)
 	ctxLog.WithField("numEvents", len(events)).Debug("Got Events.")
 
 	meetingMins := map[string]uint{
@@ -195,7 +195,7 @@ func isRoom(attendee *calendar.EventAttendee) bool {
 	return ok || isResource
 }
 
-func getEventsForUser(date time.Time, user data.User) []*calendar.Event {
+func GetEventsForUser(date time.Time, user data.User) []*calendar.Event {
 
 	ctxLog := log.WithFields(log.Fields{
 		"email": user.Email,

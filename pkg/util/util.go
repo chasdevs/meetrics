@@ -37,3 +37,7 @@ func ThisFilePath() string {
 	filename = path.Join(filename, "..")
 	return filename
 }
+
+func RootPath() string {
+	return path.Join(ThisFilePath(), "..", "..")
+}
