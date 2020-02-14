@@ -12,3 +12,8 @@ db:
 google:
   subject: admin@gmail.com
   domain: yourdomain.com
+
+rooms:
+  - Green Conference Room
+  - Zen Conference Room
+  - Phone Room- Airstream (Interior) (2 seats)

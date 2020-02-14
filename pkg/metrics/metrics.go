@@ -2,6 +2,8 @@ package metrics
 
 import (
 	"errors"
+	"github.com/chasdevs/meetrics/pkg/conf"
+	mapset "github.com/deckarep/golang-set"
 	"regexp"
 	"sync"
 	"time"
@@ -26,6 +28,8 @@ type UserEvent struct {
 
 //	Template: Mon Jan 2 15:04:05 -0700 MST 2006
 const EventDateTimeFormat = "2006-01-02T15:04:05-07:00"
+
+var rooms = initRooms()
 
 // Private Functions
 
@@ -182,17 +186,9 @@ func numAttendees(event *calendar.Event) uint8 {
 }
 
 func isRoom(attendee *calendar.EventAttendee) bool {
-	rooms := map[string]int{
-		"Green Conference Room":                      0,
-		"Zen Conference Room":                        0,
-		"Phone Room- Airstream (Interior) (2 seats)": 2,
-	}
-
-	_, ok := rooms[attendee.DisplayName]
-
+	isRoom := rooms.Contains(attendee.DisplayName)
 	isResource := attendee.Resource
-
-	return ok || isResource
+	return isRoom || isResource
 }
 
 func getEventsForUser(date time.Time, user data.User) []*calendar.Event {
@@ -358,6 +354,15 @@ func parseEventDateTime(e *calendar.EventDateTime) time.Time {
 	}
 
 	return result
+}
+
+func initRooms() mapset.Set {
+	roomStrings := conf.GetStrings("rooms")
+	rooms := mapset.NewSet()
+	for room := range roomStrings {
+		rooms.Add(room)
+	}
+	return rooms
 }
 
 func merge(chans ...<-chan UserEvent) <-chan UserEvent {

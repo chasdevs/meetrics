@@ -66,6 +66,10 @@ func GetString(path string) string {
 	return viper.GetString(path)
 }
 
+func GetStrings(path string) []string {
+	return viper.GetStringSlice(path)
+}
+
 // Private
 
 func initEnv() string {
