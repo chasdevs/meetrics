@@ -1,6 +1,7 @@
 package metrics
 
 import (
+	"errors"
 	"regexp"
 	"sync"
 	"time"
@@ -264,13 +265,18 @@ func computeEventMetrics(eventMap map[string]*calendar.Event) {
 	// For each event in the event map, store the event in the database as a meeting
 	for eventId, event := range eventMap {
 
+		frequency, err := frequencyFromEvent(event)
+		if err != nil {
+			continue
+		}
+
 		meeting := data.Meeting{
 			ID:                eventId,
 			Name:              event.Summary,
 			Description:       util.StripCtlAndExtFromUTF8(event.Description),
 			Attendees:         numAttendees(event),
 			Mins:              uint8(getEventLengthMins(event)),
-			FrequencyPerMonth: frequencyFromEvent(event),
+			FrequencyPerMonth: frequency,
 			StartDate:         parseEventDateTime(event.Start),
 			EndDate:           parseEventDateTime(event.End),
 		}
@@ -280,7 +286,7 @@ func computeEventMetrics(eventMap map[string]*calendar.Event) {
 
 }
 
-func frequencyFromEvent(event *calendar.Event) uint8 {
+func frequencyFromEvent(event *calendar.Event) (uint8, error) {
 
 	// https://regex-golang.appspot.com/assets/html/index.html
 	regex := regexp.MustCompile(`FREQ=(\w+)(.*INTERVAL(\d+))?`)
@@ -297,7 +303,8 @@ func frequencyFromEvent(event *calendar.Event) uint8 {
 		log.WithFields(log.Fields{
 			"result": result,
 			"event":  event,
-		}).Error("Index out of bounds!")
+		}).Error("Could not match regex for frequency in event.")
+		return 0, errors.New("could not match regex from event")
 	}
 
 	freq := result[1]
@@ -305,18 +312,18 @@ func frequencyFromEvent(event *calendar.Event) uint8 {
 
 	switch freq + interval {
 	case "WEEKLY":
-		return 4
+		return 4, nil
 	case "WEEKLY2":
-		return 2
+		return 2, nil
 	case "MONTHLY":
-		return 1
+		return 1, nil
 	default:
 		log.WithFields(log.Fields{
 			"summary":         event.Summary,
 			"recurrence":      event.Recurrence,
 			"freq + interval": freq + interval,
 		}).Error("Could not parse frequency for event.")
-		return 0
+		return 0, errors.New("could not parse frequency from event")
 	}
 
 }
