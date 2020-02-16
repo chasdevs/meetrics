@@ -14,6 +14,8 @@ func (mgr *manager) CreateUserMeetingMins(date time.Time, user User, meetingMins
 		Mins0:     meetingMins["mins0"],
 		Mins1:     meetingMins["mins1"],
 		Mins2Plus: meetingMins["mins2Plus"],
+		Cranktime: 	   meetingMins["crank"],
+		Deadtime: 	   meetingMins["dead"],
 	}
 
 	errors := mgr.db.Create(&ormObj).GetErrors()
@@ -35,5 +37,7 @@ type UserMeetingMins struct {
 	Mins0     uint
 	Mins1     uint
 	Mins2Plus uint
+	Cranktime uint
+	Deadtime  uint
 	CreatedAt time.Time
 }

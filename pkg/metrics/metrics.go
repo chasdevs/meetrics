@@ -103,34 +103,63 @@ func CompileMetricsForUser(date time.Time, user data.User, eventChan chan<- User
 		"mins1":     0,
 		"mins2":     0,
 		"mins3Plus": 0,
+		"crank": 	0,
+		"dead": 	0,
 	}
+
+	var startDayDur = date.Sub(date.Truncate(24 * time.Hour)) + time.Hour * 8 // start with beginning of "workday" as 8am //TODO: Make config
+	var endDayDur = date.Sub(date.Truncate(24 * time.Hour)) + time.Hour * 17 // start with beginning of "workday" as 5pm //TODO: Make config
+	var prevEndDur = startDayDur
+	var bufferMins uint
 
 	for _, event := range events {
 
 		// filter unwanted events
-		if !shouldProcessEvent(event) {
+		shouldProcess, reason := shouldProcessEvent(event)
+		if !shouldProcess {
+			ctxLog.WithFields(log.Fields{"summary": event.Summary, "reason": reason}).Debug("Not processing event.")
 			continue
 		}
 
 		// process event
+		start := parseEventDateTime(event.Start)
+		startDur := start.Sub(start.Truncate(24 * time.Hour))
+		end := parseEventDateTime(event.End)
+		endDur := end.Sub(end.Truncate(24 * time.Hour))
 		attendees := numAttendees(event)
-		mins := getEventLengthMins(event)
+		lengthMins := getEventLengthMins(event)
+
+		bufferMins = 0
+		if startDur > prevEndDur {
+			bufferMins = uint((startDur - prevEndDur).Minutes())
+		}
 
 		ctxLog.WithFields(log.Fields{
-			"id":        event.Id,
-			"summary":   event.Summary,
-			"attendees": attendees,
-			"mins":      mins,
-		}).Debug("Event Meta.")
+			"summary":    event.Summary,
+			"attendees":  attendees,
+			"start":      start,
+			"end":        end,
+			"length":     lengthMins,
+			"startDur":   startDur,
+			"prevEndDur": prevEndDur,
+			"bufferMins": bufferMins,
+		}).Debug("Processing event.")
 
 		// store metrics
 		switch {
 		case attendees == 0:
-			meetingMins["mins0"] += mins
+			meetingMins["mins0"] += lengthMins
 		case attendees == 2:
-			meetingMins["mins1"] += mins
+			meetingMins["mins1"] += lengthMins
 		case attendees > 2:
-			meetingMins["mins2Plus"] += mins
+			meetingMins["mins2Plus"] += lengthMins
+		}
+
+		switch{
+		case bufferMins <= 30:
+			meetingMins["dead"] += bufferMins
+		case bufferMins >= 120:
+			meetingMins["crank"] += bufferMins
 		}
 
 		// send event to channel
@@ -138,6 +167,21 @@ func CompileMetricsForUser(date time.Time, user data.User, eventChan chan<- User
 			eventChan <- UserEvent{&user, event}
 		}
 
+		if endDur > prevEndDur {
+			prevEndDur = endDur
+		}
+
+	}
+
+	if prevEndDur < endDayDur {
+		bufferMins = uint((endDayDur - prevEndDur).Minutes())
+		ctxLog.WithField("bufferMins", bufferMins).Debug("Adding final buffer time")
+		switch{
+		case bufferMins <= 30:
+			meetingMins["dead"] += bufferMins
+		case bufferMins >= 120:
+			meetingMins["crank"] += bufferMins
+		}
 	}
 
 	// Store in database
@@ -147,21 +191,33 @@ func CompileMetricsForUser(date time.Time, user data.User, eventChan chan<- User
 
 }
 
-func shouldProcessEvent(event *calendar.Event) bool {
+func shouldProcessEvent(event *calendar.Event) (bool, string) {
 
 	isCancelled := event.Status == "cancelled"
-	hasStartAndEnd := event.Start != nil && event.End != nil && event.Start.DateTime != "" && event.End.DateTime != ""
-	belongsToRecurringEvent := event.RecurringEventId != ""
-
-	if isCancelled || !hasStartAndEnd || belongsToRecurringEvent {
-		return false
+	if isCancelled {
+		return false, "Cancelled"
 	}
 
-	var maxHrs uint = 6
-	maxMins := maxHrs * 60
-	isTooLong := getEventLengthMins(event) > maxMins
+	hasStartAndEnd := event.Start != nil && event.End != nil && event.Start.DateTime != "" && event.End.DateTime != ""
+	if !hasStartAndEnd {
+		return false, "Does not have start and end"
+	}
 
-	return !isTooLong
+	belongsToRecurringEvent := event.RecurringEventId != ""
+	if belongsToRecurringEvent {
+		return false, "Belongs to recurring event"
+	}
+
+	maxHrs := 6
+	maxMins := maxHrs * 60
+	isTooLong := getEventLengthMins(event) > uint(maxMins)
+
+	if isTooLong {
+		return false, "Too long"
+	}
+
+	return true, ""
+
 }
 
 func shouldSaveEvent(event *calendar.Event) bool {
@@ -350,7 +406,7 @@ func parseEventDateTime(e *calendar.EventDateTime) time.Time {
 		log.WithFields(log.Fields{
 			"DateTime": e.DateTime,
 		}).Error("Could not parse EventDateTime.")
-		panic("killing")
+		panic("could not parse datetime")
 	}
 
 	return result
