@@ -5,6 +5,7 @@ import (
 	"github.com/chasdevs/meetrics/pkg/conf"
 	mapset "github.com/deckarep/golang-set"
 	"regexp"
+	"sort"
 	"sync"
 	"time"
 
@@ -108,18 +109,34 @@ func CompileMetricsForUser(date time.Time, user data.User, eventChan chan<- User
 	}
 
 	var startDayDur = date.Sub(date.Truncate(24 * time.Hour)) + time.Hour * 8 // start with beginning of "workday" as 8am //TODO: Make config
-	var endDayDur = date.Sub(date.Truncate(24 * time.Hour)) + time.Hour * 17 // start with beginning of "workday" as 5pm //TODO: Make config
+	var endDayDur = date.Sub(date.Truncate(24 * time.Hour)) + time.Hour * 16 // start with end of "workday" as 4pm //TODO: Make config
 	var prevEndDur = startDayDur
 	var bufferMins uint
 
+	// filter unprocessable
+	var ln int
 	for _, event := range events {
-
-		// filter unwanted events
-		shouldProcess, reason := shouldProcessEvent(event)
+		shouldProcess, reason := shouldProcessEvent(event, user, date)
 		if !shouldProcess {
-			ctxLog.WithFields(log.Fields{"summary": event.Summary, "reason": reason}).Debug("Not processing event.")
+			ctxLog.WithFields(log.Fields{"summary": event.Summary, "reason": reason}).Debug("Filtering unprocessable event.")
 			continue
 		}
+		events[ln] = event
+		ln++
+	}
+	events = events[:ln]
+
+	sort.Slice(events, func(i int, j int) bool {
+		event1 := events[i]
+		event2 := events[j]
+		start1 := parseEventDateTime(event1.Start)
+		startDur1 := start1.Sub(start1.Truncate(24 * time.Hour))
+		start2 := parseEventDateTime(event2.Start)
+		startDur2 := start2.Sub(start2.Truncate(24 * time.Hour))
+		return startDur1 < startDur2
+	})
+
+	for _, event := range events {
 
 		// process event
 		start := parseEventDateTime(event.Start)
@@ -191,7 +208,7 @@ func CompileMetricsForUser(date time.Time, user data.User, eventChan chan<- User
 
 }
 
-func shouldProcessEvent(event *calendar.Event) (bool, string) {
+func shouldProcessEvent(event *calendar.Event, user data.User, date time.Time) (bool, string) {
 
 	isCancelled := event.Status == "cancelled"
 	if isCancelled {
@@ -203,10 +220,21 @@ func shouldProcessEvent(event *calendar.Event) (bool, string) {
 		return false, "Does not have start and end"
 	}
 
-	belongsToRecurringEvent := event.RecurringEventId != ""
-	if belongsToRecurringEvent {
-		return false, "Belongs to recurring event"
+	//start := parseEventDateTime(event.Start)
+	//if start.Truncate(time.Hour * 24) != date.Truncate(time.Hour * 24) {
+	//	return false, "Event not on same day"
+	//}
+
+	for _, attendee := range event.Attendees {
+		if attendee.Email == user.Email && attendee.ResponseStatus != "accepted" {
+			return false, "Declined event"
+		}
 	}
+
+	//belongsToRecurringEvent := event.RecurringEventId != ""
+	//if belongsToRecurringEvent {
+	//	return false, "Belongs to recurring event"
+	//}
 
 	maxHrs := 6
 	maxMins := maxHrs * 60

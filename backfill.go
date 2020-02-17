@@ -17,11 +17,11 @@ func init() {
 // Main
 
 func main() {
-	computeLastDays(365)
+	computeLastDays(365*2)
 }
 
 func computeLastDays(days int) {
-	for i := 0; i < days; i++ {
+	for i := 0; i <= days; i++ {
 		date := util.BeginningOfDay(i)
 		if util.IsWeekday(date) {
 			log.WithField("date", date).Info("Compiling metrics for date.")
