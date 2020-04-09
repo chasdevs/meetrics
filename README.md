@@ -72,10 +72,10 @@ docker build -t chasdevs/meetrics .
 You can run locally from the docker image:
 
 ```bash
-docker run --rm -e DB_HOST="docker.for.mac.localhost" chasdevs/meetrics
+docker run --rm -e DB_HOST="host.docker.internal" -v `pwd`:/app chasdevs/meetrics
 ```
 
-Or against prod:
+Or against prod (must have a compiled image with a production config file):
 ```bash
 docker run --rm -e ENV=production chasdevs/meetrics
 ```
