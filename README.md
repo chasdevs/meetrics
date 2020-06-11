@@ -1,3 +1,6 @@
+
+**Update:** *Check out [meetrics.io](https://meetrics.io) for an easy way to see your own team’s metrics. Coming soon!*
+
 # Meetrics
 
 Basic Google Calendar meeting data tracking within a Google organization. This is the codebase behind [this blog post](https://engineering.videoblocks.com/analyzing-meeting-metrics-using-the-google-calendar-api-3c76c9f8ffea) which describes how we analyzed meeting data at [Storyblocks](https://www.storyblocks.com).
