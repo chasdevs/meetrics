@@ -1,5 +1,5 @@
 
-**Update:** *Check out [meetrics.io](https://meetrics.io) for an easy way to see your own team’s metrics. Coming soon!*
+**Update:** *Meetrics is now a real product! Check out [meetrics.io](https://meetrics.io) for an easy way to monitor your organization's meeting health.*
 
 # Meetrics
 
